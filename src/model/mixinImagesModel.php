@@ -1,10 +1,14 @@
 <?php
 // header('Content-Type: image/png');
-$url = $_POST['url'];
-$dest = imagecreatefromjpeg('../../data/images/beautiful-anture-desktop-background-wallpaper.jpg1540386974.jpg');
-$dest2 = imagecreatefromjpeg('../../data/images/small.jpg1540387037.jpg');
-$src = imagecreatefromjpeg('../../data/images/beautiful_scenic_01_hd_picture_166320.jpg1540334918.jpg');
-$src2 = imagecreatefromjpeg('../../data/images/images.jpg1540334640.jpg');
+
+// $dest2 = imagecreatefromjpeg('../../data/images/small.jpg1540387037.jpg');
+// $src = imagecreatefromjpeg('../../data/images/beautiful_scenic_01_hd_picture_166320.jpg1540334918.jpg');
+// $src2 = imagecreatefromjpeg('../../data/images/images.jpg1540334640.jpg');
+
+
+
+
+
 
 // imagealphablending($dest, true);
 // imagesavealpha($dest, true);
@@ -75,44 +79,63 @@ $src2 = imagecreatefromjpeg('../../data/images/images.jpg1540334640.jpg');
 
 
 
-$image = imagecreatefromjpeg('../../data/images/t~A(c)l~A(c)charg~A(c)(2).jpg1540387204.jpg');
-$imagex = imagesx($image);
-$imagey = imagesy($image);
 
-$pixelate_y=10;
-$pixelate_x=10;
-$height=$imagey;
-$width=$imagex;
-for($y = 0;$y < $height;$y += $pixelate_y+1)
-{
-    for($x = 0;$x < $width;$x += $pixelate_x+1)
-    {
-    // get the color for current pixel
-    $rgb = imagecolorsforindex($image, imagecolorat($image, $x, $y));
 
-    // get the closest color from palette
-    $color = imagecolorclosest($image, $rgb['red'], $rgb['green'], $rgb['blue']);
-imagealphablending($image, true);
-imagesavealpha($image, true);
-imagecopymerge($image, $dest, 0, 0, 50, 0, 50, 200, 1); //have to play with these numbers for it to work for you, etc.
-imagecopymerge($image, $dest, 0, 100, 100, 50, 200, 200, 1); //have to play with these numbers for it to work for you, etc.
-imagecopymerge($image, $dest, 250, 0, 100, 50, 200, 200, 1); //have to play with these numbers for it to work for you, etc.
-
-    imagefilledrectangle($image, $x, $y, $x+$pixelate_x, $y+$pixelate_y, $color);   
-    }
+header('Content-Type: application/json');
+$temp = [];
+foreach ($_POST['val'] as $key) {
+    $path = "../../". $key;
+    $temp [] = pixelateImage($path);
 }
+echo json_encode($temp);
 
 
-for($y = 0;$y < $height;$y += $pixelate_y+1000)
-{
-for($x = 0;$x < $width;$x += $pixelate_x+1000)
-{
-    //make a border line for each square
-    $rgb = imagecolorsforindex($image, imagecolorat($image, $x, $y));
-    $color = imagecolorclosest($image, 123, 123, 123);
-    imagelinethick($image, $x, $y, $x, $y+$pixelate_y, $color, 1);
-    imagelinethick($image, $x, $y, $x+$pixelate_x, $y, $color, 2);
-}       
+
+function pixelateImage($path){
+    $dest = imagecreatefromjpeg($path);
+    $image = imagecreatefromjpeg($path);
+    $imagex = imagesx($image);
+    $imagey = imagesy($image);
+
+    $pixelate_y=10;
+    $pixelate_x=10;
+    $height=$imagey;
+    $width=$imagex;
+    for($y = 0;$y < $height;$y += $pixelate_y+1)
+    {
+        for($x = 0;$x < $width;$x += $pixelate_x+1)
+        {
+        // get the color for current pixel
+        $rgb = imagecolorsforindex($image, imagecolorat($image, $x, $y));
+
+        // get the closest color from palette
+        $color = imagecolorclosest($image, $rgb['red'], $rgb['green'], $rgb['blue']);
+        imagealphablending($image, true);
+        imagesavealpha($image, true);
+        // imagecopymerge($image, $dest, 0, 0, 50, 0, 50, 200, 1); //have to play with these numbers for it to work for you, etc.
+        // imagecopymerge($image, $dest, 0, 100, 100, 50, 200, 200, 1); //have to play with these numbers for it to work for you, etc.
+        // imagecopymerge($image, $dest, 250, 0, 100, 50, 200, 200, 1); //have to play with these numbers for it to work for you, etc.
+
+        imagefilledrectangle($image, $x, $y, $x+$pixelate_x, $y+$pixelate_y, $color);   
+        }
+    }
+
+
+    for($y = 0;$y < $height;$y += $pixelate_y+1000)
+    {
+        for($x = 0;$x < $width;$x += $pixelate_x+1000)
+        {
+            //make a border line for each square
+            $rgb = imagecolorsforindex($image, imagecolorat($image, $x, $y));
+            $color = imagecolorclosest($image, 123, 123, 123);
+            imagelinethick($image, $x, $y, $x, $y+$pixelate_y, $color, 1);
+            imagelinethick($image, $x, $y, $x+$pixelate_x, $y, $color, 2);
+        }       
+    }
+    $fileName = 'createdImage'.time(). microtime(true) . '.jpg';
+    $path = '../../data/imagesCreated/';
+    imageJPEG($image, $path . $fileName);
+    return $fileName;
 }
 
 function imagelinethick($image, $x1, $y1, $x2, $y2, $color, $thick = 1)
@@ -140,5 +163,5 @@ imagefilledpolygon($image, $points, 4, $color);
 return imagepolygon($image, $points, 4, $color);
 }
 
-header("Content-Type: image/JPEG");
-imageJPEG($image);
+// header("Content-Type: image/JPEG");
+// imageJPEG($image, 'img');

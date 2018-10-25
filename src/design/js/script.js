@@ -1,3 +1,4 @@
+let incrementImage = 0;
 $(document).ready(function () {
     $(".main").addClass('loaded');
     $(window).on('beforeunload', function () {
@@ -27,8 +28,9 @@ $(document).ready(function () {
                     data = data['success'];
                     for (let i = 0; i < data.length; i++) {
                         $('.imgContent').prepend(
-                            '<img itemid="itm-'+i+'" class="theImages" src="data/images/' + data[i]+'" alt="no image">'
+                            '<img itemid="itm-'+incrementImage+'" class="theImages" src="data/images/' + data[i]+'" alt="no image">'
                         );
+                        incrementImage++;
                     }
                     $('.theImages').draggable({
                         // revert: 'invalid',
@@ -99,7 +101,7 @@ $(document).ready(function () {
     // })
     $('body').on('mouseup', ".theImages", function () {
         console.log('was dragging');
-        $('.theImages').css({ 'width': '100px' });
+        $(this).css({ 'width': '100px' });
 
     });
 
@@ -111,44 +113,26 @@ $(document).ready(function () {
             val.push($(this).attr('src'));
                 }
         );
+        $('.view').append('<img src="data/imgSite/loader.gif">');
         $.ajax({
-            url: "src/model/uploadFilesModel.php",
+            url: "src/model/mixinImagesModel.php",
             type: "POST",
-            data: new FormData(this),
+            data: {val: val},
             dataType: "json",
-            contentType: false,
-            cache: false,
-            processData: false,
             success: function (data) {
                 console.log(data);
-                errors = data['error'];
-                console.log(errors);
-                data = data['success'];
+                $('.view').empty();
+                $(".view").append(data.responseText);
                 for (let i = 0; i < data.length; i++) {
-                    $('.imgContent').prepend(
-                        '<img itemid="itm-' + i + '" class="theImages" src="data/images/' + data[i] + '" alt="no image">'
+                    $('.view').prepend(
+                        '<img itemid="img-' + data[i] + '" class="theCreatedImages" src="data/imagesCreated/' + data[i] + '" alt="no image">'
                     );
                 }
-                $('.theImages').draggable({
-                    // revert: 'invalid',
-                    snap: true,
-                    appendTo: 'body',
-                    // containment: '.creation',
-                    scroll: false,
-                    cursor: "move",
-                    helper: "clone",
-                });
-                if (errors.length > 0) {
-                    for (let i = 0; i < errors.length; i++) {
-                        $('.errors').append("<li>" + errors[i] + " n'est pas du bon format</li><br>");
-                    }
-                }
-                else {
-                    $('.errors').empty();
-                }
+                $('.theCreatedImages').css({ 'width': '100px' });
             },
             error: function (error) {
-                console.log('error', error);
+                $('.view').empty();
+                $(".view").append(error.responseText);
             }
         })
     })
@@ -166,9 +150,17 @@ $(document).ready(function () {
         $('.modifyImage').css({ 'display': 'block' });
         $('#imgDisplay').html(
             '<img class="theImages" src="' + $(this).attr('src') + '" alt="no image">'
-        );;
-
+        );
     })
+
+    $('section').on('click', '.theCreatedImages', function () {
+        $('.modifyImage').css({ 'display': 'block' });
+        $('#imgDisplay').html(
+            '<img class="theImages" src="' + $(this).attr('src') + '" alt="no image">'
+        );
+    })
+
+
     $('#closeModifyImage').on('click', function(){
         $('.modifyImage').css({'display':'none'});
     })
