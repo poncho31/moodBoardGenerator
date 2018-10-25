@@ -1,0 +1,2 @@
+find . -size +3M | cat >> .gitignore
+.bashrc

@@ -1,0 +1,201 @@
+@import "base";
+$orangePale: rgb(250, 232, 200);
+$orange: rgb(245, 245, 245);
+*{
+    box-sizing: border-box;
+}
+button:hover{
+    cursor: pointer;
+}
+
+ul, li, a, h1{margin: 0;}
+@mixin navbar($align, $float){
+    nav{
+        position: relative;    
+        text-align: $align;
+        float: $float;
+        ul{
+            height: 6vh;
+            li{
+                box-shadow:2px 0 2px -2px #444, -2px 0 2px -2px #444;
+                display: inline-block;
+                padding: 20px;
+                transition: all 0.4s ease-in-out;
+                a{
+                    padding: 20px;
+                    font-weight: bolder;
+                    color: #444;
+                    text-decoration: none;
+                    text-shadow: 2px 2px 0px $orange;
+                    cursor: pointer;
+                }
+                &:hover{
+                    background: $orange;
+                    box-shadow:2px 0 2px -2px #444, -2px 0 2px -2px #444;
+                    a{
+                        color: #444;
+                        text-shadow: 2px 2px 2px #444;
+                        text-decoration: none;
+                    }
+                }
+            }
+        }
+    }
+}
+
+// SITE
+html{
+    body{
+        background: $orangePale;
+        margin: 0 1%;
+        header{
+            background: $orangePale;
+            @include navbar(left, none);
+            #appTitle{
+                position: absolute;
+                top:1%;
+                right: 1%;
+                text-align: center;
+                color: #444;
+                text-shadow: 2px 2px 2px #444;
+                font-variant: small-caps;
+            }
+        }
+        .clear{
+            clear: both;
+        }
+        section{
+
+            background: $orange;
+            width: 100%;
+            overflow-x: auto;
+            min-height: 86vh;
+            padding: 5px;
+            box-shadow: -2px 2px 10px;
+        }
+        footer{   
+            background: $orangePale;
+            width: 100%;
+            @include navbar(left, right);
+        }
+    }
+}
+//  JS manipulation class
+.active{
+    position: relative;
+    z-index: 11;
+    background: $orange;
+    box-shadow:2px 0 2px -2px #444, -2px 0 2px -2px #444;
+    a{
+        color: white;
+        text-shadow: 2px 2px 2px #444;
+    }
+}
+
+.main{
+    opacity : 0;
+    -webkit-transition: all 0.5s ease-in-out;
+    -moz-transition: all 0.5s ease-in-out;
+    -ms-transition: all 0.5s ease-in-out;
+    -o-transition: all 0.5s ease-in-out;
+    transition: all 0.5s ease-in-out;
+}
+.loaded {
+    opacity : 1;
+}
+.draggableSize{
+    width: 100px;
+}
+.main{
+
+    position: relative;
+    // z-index: 10;
+    .imgContent{
+        display: none;
+        height: 12vh;
+        overflow-x: auto;
+        // overflow-y: hidden;
+        border: double 4px darken($color: $orange, $amount: 10);
+        border-radius: 4px;
+        position: relative;
+        -webkit-overflow-scrolling: touch;
+        width: 100%;
+        &::-webkit-scrollbar {
+            display: none;
+        }
+        .theImages{
+            justify-content: space-around;
+            object-fit: contain;
+            margin: 5px;
+            filter: grayscale(0.6);
+            max-height: 12vh;
+            position: relative;
+        }
+        .imgHover{
+            transition: all 0.3s ease-in-out;
+            cursor: pointer;
+            filter: grayscale(0);
+        }
+        .imgOut{
+            transition: all 0.3s ease-in-out;
+        }
+    }
+    .treatment{
+         display: flex;
+        .creation{
+            width: 50%;
+            margin: 5px;
+            border: solid 1px black;
+            height: 70vh;
+        }
+        .view{
+            width: 50%;
+            margin: 5px;
+            border: solid 1px black;
+        }
+    }
+}
+
+
+.modifyImage{
+    position: absolute;
+    z-index: 100;
+    top: 0; right: 0;
+    display: none;
+    width: 74vh;
+    height: auto;
+    background: rgba(255, 165, 0, 0.7);
+    margin: 24vh 2vw 0 2vw;
+    border: double 5px black;
+    box-shadow: -5px 5px 5px darken($color: $orange, $amount: 20);
+    #closeModifyImage{
+        position: absolute;
+        top: -2vh;
+        right: 0;
+        color: #FFF;
+        text-shadow: 1px 1px 1px black;
+        opacity: 50;
+        font-weight: bold;
+        font-size: 3em;
+        z-index: 100;
+        &:hover{
+            cursor: pointer;
+            color: red;
+            transition: all 0.5s ease-in-out;
+        }
+    }
+    #imgDisplay{
+        position: relative;
+        margin: 0 auto;
+        width: 90%;
+        img{
+            margin: 5px auto 5px auto;
+            max-width: 100%;
+            max-height: 100%;
+        }
+    }
+    #imgTools{
+        border: double 5px $orange;
+        width: 100%;
+    }
+}

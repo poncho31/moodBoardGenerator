@@ -1,0 +1,9 @@
+preferred_syntax = :scss
+http_path = '/'
+css_dir = 'design/css'
+sass_dir = 'design/scss'
+images_dir = 'design/img'
+javascripts_dir = 'design/js'
+relative_assets = true
+line_comments = true
+output_style = :compressed

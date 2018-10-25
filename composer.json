@@ -1,0 +1,15 @@
+{
+    "autoload": {
+        "classmap": [
+            "class/Database/Database.php",
+            "class/Html/Menu.php",
+            "class/Config/Config.php",
+            "class/Routing/Router.php",
+            "class/Routing/Route.php",
+            "class/Routing/RouterException.php",
+            "class/Controller/PostsController.php"
+        ]
+    },
+    "require": {
+    }
+}
