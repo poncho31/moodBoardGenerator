@@ -88,27 +88,32 @@ $(document).ready(function () {
 
 
     var isDragging = false;
-    $('body').on('mousedown', ".theImages", function(){
+    $('.imgContent').on('mousedown', ".theImages", function(){
             console.log('not dragging');
             // $(this).addClass('.draggableSize');
-            $(this).css({'width':'100px'});
-    })
+            $(this).css({'width':'150px'});
+    }).on('mousemove', '.theImages', () => { console.log('moving');})
     // $('body').on('mousemove', '.theImages', function(){
     //     // $(this).removeClass('.draggableSize');
     //     $(this).addClass('.draggableSize');
     //     console.log('dragging');
 
     // })
-    $('body').on('mouseup', ".theImages", function () {
+    $('.creation').on('mouseup', ".theImages", function () {
         console.log('was dragging');
-        $(this).css({ 'width': '100px' });
+        $(this).css({ 'width': '150px' });
 
     });
+    // $('.theImages').on('mousedown', function () {
+    //     console.log('was dragging');
+    //     $(this).css({ 'width': '1000px' });
 
+    // });
 
     // GENERE LA VUE
     $('body').on('click', '.clickView', function(){
         let val = [];
+        $('.view').empty();
         $('.creation img').each(function(){
             val.push($(this).attr('src'));
                 }
@@ -128,7 +133,7 @@ $(document).ready(function () {
                         '<img itemid="img-' + data[i] + '" class="theCreatedImages" src="data/imagesCreated/' + data[i] + '" alt="no image">'
                     );
                 }
-                $('.theCreatedImages').css({ 'width': '100px' });
+                $('.theCreatedImages').css({ 'width': '50%' });
             },
             error: function (error) {
                 $('.view').empty();

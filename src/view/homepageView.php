@@ -17,8 +17,8 @@
             </form>
             <div class="treatment">
                 <div class="creation"></div>
-                <button class="btn btn-success clickView">Vue</button>
-                <div class="view">VIEW DIV</div>
+                <button class="btn btn-success clickView">Mix</button>
+                <div class="view"></div>
             </div>
 
         </div>

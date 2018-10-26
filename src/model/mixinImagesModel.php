@@ -1,4 +1,6 @@
 <?php
+include_once '../../class/Image/ExifImageUpdate.php';
+use appName\Image\IPTC;
 // header('Content-Type: image/png');
 
 // $dest2 = imagecreatefromjpeg('../../data/images/small.jpg1540387037.jpg');
@@ -82,60 +84,188 @@
 
 
 header('Content-Type: application/json');
-$temp = [];
-foreach ($_POST['val'] as $key) {
-    $path = "../../". $key;
-    $temp [] = pixelateImage($path);
+$images = [];
+$moodBoardImages = [];
+// Modifie une image
+$post = $_POST['val'];
+for ($i = 0; $i < count($post); $i++) {
+    $image = "../../". $post[$i];
+    $image2 = (count($post) > 1 && $i + 1 < count($post))? "../../". $post[$i + 1] : false;
+    $size = getimagesize($image);
+    $images [] = filterImage($image, false, $size, $i);
 }
-echo json_encode($temp);
+
+// Merge images
+$filename=''; $path="../../data/imagesCreated/";
+for ($i = 0, $j=0; $i < count($images); $i++) {
+    $j = ($i < count($images) && $i > 0)? $path . $fileName: $path.$images[$i];
+    $size = getimagesize($path.$images[0]);
+    $image = imagecreatefromjpeg($path.$images[$i]);
+    imagescale($image, $size[0], $size[1]);
+    
+    $image2 = imagecreatefromjpeg($j);
+    $fileName = 'modifiedImage'.time(). microtime(true) . '.jpg';
+    imagecopymerge_alpha($image, $image2, 0, 0, 0, 0, $size[0], $size[1], 80);
+    imageJPEG($image, $path . $fileName);
+    imagedestroy($image);
+    imagedestroy($image2);
+
+    $objIPTC = new IPTC($path.$fileName);
+    $objIPTC->setValue(IPTC_HEADLINE, "MoodeBoarded image");
+    $objIPTC->setValue(IPTC_CAPTION, "Created with MoodBoard generator");
+    // echo $objIPTC->getValue(IPTC_HEADLINE);
+    $moodBoardImages [] = $fileName;
+}
+echo json_encode($moodBoardImages);
 
 
 
-function pixelateImage($path){
-    $dest = imagecreatefromjpeg($path);
-    $image = imagecreatefromjpeg($path);
-    $imagex = imagesx($image);
-    $imagey = imagesy($image);
+function filterImage($img, $img2, $size, $imageIndex){
+    $originalImage = imagecreatefromjpeg(($img2 != false)? $img2 : $img);
+    $image = imagecreatefromjpeg($img);
+    $imagex = $size[0];
+    $imagey = $size[1];
+    // get proeminent color of image
+    $thumb=imagecreatetruecolor(1,1); imagecopyresampled($thumb,$image,0,0,0,0,1,1,imagesx($image),imagesy($image));
+    $hexa= '#' . strtoupper(dechex(imagecolorat($thumb,0,0)));
+    // convert hexa to rgb
+    list($r, $g, $b) = sscanf($hexa, "#%02x%02x%02x");
 
-    $pixelate_y=10;
-    $pixelate_x=10;
-    $height=$imagey;
-    $width=$imagex;
-    for($y = 0;$y < $height;$y += $pixelate_y+1)
-    {
-        for($x = 0;$x < $width;$x += $pixelate_x+1)
+    $randomBool = rand(0, 1);
+    $pixelNumber = $size[0] * (rand(10, 80)/1000);
+    $pixelate = [
+                'pixelise' =>
+                            [
+                                'bool' => $randomBool,
+                                'pixelIncrementx' => $pixelNumber,
+                                'pixelIncrementy' => $pixelNumber,
+                                'divider' => 2,
+                                'operator' => ($randomBool)? '/':'*',
+                                'orientationX' => 1 + rand(0, 15)/1000,
+                                'orientationY' => 1 + rand(0, 15)/1000
+                            ],
+                'dimension' => 
+                            [
+                                'height' => $imagey,
+                                'width' => $imagex
+                            ],
+                'quadrillage' =>
+                            [
+                                'bool' => $randomBool,
+                                'H' => $randomBool,
+                                'V' => $randomBool,
+                                'pixelIncrementx' => $pixelNumber / 2,
+                                'pixelIncrementy' => $pixelNumber / 2,
+                                'thickH' => rand(0,3),
+                                'thickV' => rand(0,3),
+                                'randomColor' => $randomBool,
+                                'colorH' => array('red'=>$r,'green'=>$g, 'blue'=>$b),
+                                'colorV' => array('red'=>$r,'green'=>$g, 'blue'=>$b),
+                                'colorRH' => ['red'=>rand(0, 255), 'green'=>rand(0, 255), 'blue'=>rand(0, 255)],
+                                'colorRV' => ['red'=>rand(0, 255), 'green'=>rand(0, 255), 'blue'=>rand(0, 255)],
+                                'typeH'   => 
+                                        [
+                                            'random' => $randomBool
+                                        ],
+                                'typeV'   => 
+                                        [
+                                            'random' => $randomBool
+                                        ]
+                            ],
+                'autoMerge' => 
+                            [
+                                'bool' => $randomBool,
+                            ]
+                ];
+
+
+
+    $height=$pixelate['dimension']['height'];
+    $width=$pixelate['dimension']['width'];
+    $divider = $pixelate['pixelise']['divider'];
+    $operator = $pixelate['pixelise']['operator'];
+    $axeX = $pixelate['pixelise']['orientationX'];
+    $axeY = $pixelate['pixelise']['orientationY'];
+    // PIXELLISATION DE L'IMAGE
+    if ($pixelate['pixelise']['bool']) {
+        for($y = 0;$y < $height;$y += $pixelate['pixelise']['pixelIncrementy'])
         {
-        // get the color for current pixel
-        $rgb = imagecolorsforindex($image, imagecolorat($image, $x, $y));
-
-        // get the closest color from palette
-        $color = imagecolorclosest($image, $rgb['red'], $rgb['green'], $rgb['blue']);
-        imagealphablending($image, true);
-        imagesavealpha($image, true);
-        // imagecopymerge($image, $dest, 0, 0, 50, 0, 50, 200, 1); //have to play with these numbers for it to work for you, etc.
-        // imagecopymerge($image, $dest, 0, 100, 100, 50, 200, 200, 1); //have to play with these numbers for it to work for you, etc.
-        // imagecopymerge($image, $dest, 250, 0, 100, 50, 200, 200, 1); //have to play with these numbers for it to work for you, etc.
-
-        imagefilledrectangle($image, $x, $y, $x+$pixelate_x, $y+$pixelate_y, $color);   
+            for($x = 0;$x < $width;$x += $pixelate['pixelise']['pixelIncrementx'])
+            {
+                $rgb = imagecolorsforindex($image, imagecolorat($image, $x, $y));
+                $color = imagecolorclosest($image, $rgb['red'], $rgb['green'], $rgb['blue']);
+                imagefilledrectangle($image, operator($x, $axeX, $operator), operator($y, $axeX, $operator), $x+($pixelate['pixelise']['pixelIncrementx'] / $divider), $y+($pixelate['pixelise']['pixelIncrementy']/$divider), $color);   
+                if ($x % 1.5 == 0 && $y % 1.5 == 0) {
+                }
+            }
         }
     }
 
-
-    for($y = 0;$y < $height;$y += $pixelate_y+1000)
+    
+    // QUADRILLAGE DE L'IMAGE
+    $pixelate_y= $pixelate['quadrillage']['pixelIncrementy'];
+    $pixelate_x= $pixelate['quadrillage']['pixelIncrementx'];
+    for($y = 0;$y < $height;$y += $pixelate_y)
     {
-        for($x = 0;$x < $width;$x += $pixelate_x+1000)
-        {
-            //make a border line for each square
+        for($x = 0;$x < $width;$x += $pixelate_x)
+        {   
+            $quadri = $pixelate['quadrillage'];
             $rgb = imagecolorsforindex($image, imagecolorat($image, $x, $y));
-            $color = imagecolorclosest($image, 123, 123, 123);
-            imagelinethick($image, $x, $y, $x, $y+$pixelate_y, $color, 1);
-            imagelinethick($image, $x, $y, $x+$pixelate_x, $y, $color, 2);
+
+            if($quadri['randomColor']){
+                $colV = $quadri['colorRV'];
+                $colH = $quadri['colorRH'];
+            }
+            else{
+                $colV = $quadri['colorV'];
+                $colH = $quadri['colorH'];
+            }
+            $colorV = imagecolorclosest($image, $colV['red'], $colV['green'], $colV['blue']);
+            $colorH = imagecolorclosest($image, $colH['red'], $colH['green'], $colH['blue']);
+            if ($quadri['bool']) {
+
+                $Vx1 = $x; $Vy1 = $y; $Vx2 = $x; $Vy2 = $y+$pixelate_y;
+                $Hx1 = $x; $Hy1 = $y; $Hx2 = $x+$pixelate_x; $Hy2 = $y;
+
+                $randV = $quadri['typeV']['random'];
+                $randH = $quadri['typeH']['random'];
+                $m = $divider;
+                $m2 = -$divider;
+                if ($randV) {
+                    $Vx1 += rand(-rand(0, $m), $m); $Vy1 += rand(-rand(0, $m), $m); $Vx2 += rand(-rand(0, $m), $m); $Vy2 += rand(-rand(0, $m), $m);
+                }
+                if ($randH) {
+                    $Hx1 += rand(-rand(0, $m2), $m2); $Hy1 += rand(-rand(0, $m2), $m2); $Hx2 += rand(-rand(0, $m2), $m2); $Hy2 += rand(-rand(0, $m), $m);
+                }
+                if($quadri['V'])imagelinethick($image, $Vx1, $Vy1, $Vx2, $Vy2, $colorV, $quadri['thickV']);
+                if($quadri['H'])imagelinethick($image, $Hx1, $Hy1, $Hx2, $Hy2, $colorH, $quadri['thickH']);
+            }
         }       
     }
-    $fileName = 'createdImage'.time(). microtime(true) . '.jpg';
+    getRandomImageFilter($image);
+
+    $merge = $pixelate['autoMerge'];
+    if ($merge['bool']) {
+        // imagealphablending($image, true);
+        // imagesavealpha($image, true);
+        // $img = imagecreatetruecolor(200, 200);
+        // imagearc($img,  60,  75,  50,  50,  0, 100, imagecolorallocate($img,   0, 255,   0));
+        // imagecopymerge_alpha($image, $originalImage, 0, 0, 0, 0, $size[0], $size[1], 50);
+        imagecopymerge($image, $originalImage, 0, 0, 0, 0, $size[0], $size[1], 50); //have to play with these numbers for it to work for you, etc.
+    }
+
+
+    $fileName = 'modifiedImage'.time(). microtime(true) . '.jpg';
     $path = '../../data/imagesCreated/';
     imageJPEG($image, $path . $fileName);
-    return $fileName;
+    imagedestroy($image);
+    imagedestroy($originalImage);
+
+    $objIPTC = new IPTC($path.$fileName);
+    $objIPTC->setValue(IPTC_HEADLINE, "Created Image");
+    $objIPTC->setValue(IPTC_CAPTION, "Created with MoodBoard generator");
+    // echo $objIPTC->getValue(IPTC_HEADLINE);
+        return $fileName;
 }
 
 function imagelinethick($image, $x1, $y1, $x2, $y2, $color, $thick = 1)
@@ -159,9 +289,159 @@ $points = array(
     round($x2 + (1+$k)*$a), round($y2 - (1-$k)*$a),
     round($x2 + (1-$k)*$a), round($y2 + (1+$k)*$a),
 );
-imagefilledpolygon($image, $points, 4, $color);
-return imagepolygon($image, $points, 4, $color);
+imagefilledpolygon($image, $points, 2, $color);
+return imagepolygon($image, $points, 2, $color);
 }
 
 // header("Content-Type: image/JPEG");
 // imageJPEG($image, 'img');
+function imagecopymerge_alpha($dst_im, $src_im, $dst_x, $dst_y, $src_x, $src_y, $src_w, $src_h, $pct){ 
+    // creating a cut resource 
+    $cut = imagecreatetruecolor($src_w, $src_h); 
+    // copying relevant section from background to the cut resource 
+    imagecopy($cut, $dst_im, 0, 0, $dst_x, $dst_y, $src_w, $src_h); 
+    
+    // copying relevant section from watermark to the cut resource 
+    imagecopy($cut, $src_im, 0, 0, $src_x, $src_y, $src_w, $src_h); 
+    
+    // insert cut resource to destination image 
+    imagecopymerge($dst_im, $cut, $dst_x, $dst_y, 0, 0, $src_w, $src_h, $pct); 
+} 
+function imagecopymerge_alpha2($dst_im, $src_im, $dst_x, $dst_y, $src_x, $src_y, $src_w, $src_h, $pct){ 
+    // creating a cut resource 
+    $cut = imagecreatetruecolor($src_w, $src_h); 
+    // copying relevant section from background to the cut resource 
+    imagecopy($cut, $dst_im, 0, 0, $dst_x, $dst_y, $src_w, $src_h); 
+    
+    // copying relevant section from watermark to the cut resource 
+    imagecopy($cut, $src_im, 0, 0, $src_x, $src_y, $src_w, $src_h); 
+    
+    // insert cut resource to destination image 
+    return imagecopymerge($dst_im, $cut, $dst_x, $dst_y, 0, 0, $src_w, $src_h, $pct); 
+} 
+
+function blur($gdImageResource, $blurFactor = 3)
+{
+  // blurFactor has to be an integer
+  $blurFactor = round($blurFactor);
+  
+  $originalWidth = imagesx($gdImageResource);
+  $originalHeight = imagesy($gdImageResource);
+
+  $smallestWidth = ceil($originalWidth * pow(0.5, $blurFactor));
+  $smallestHeight = ceil($originalHeight * pow(0.5, $blurFactor));
+
+  // for the first run, the previous image is the original input
+  $prevImage = $gdImageResource;
+  $prevWidth = $originalWidth;
+  $prevHeight = $originalHeight;
+
+  // scale way down and gradually scale back up, blurring all the way
+  for($i = 0; $i < $blurFactor; $i += 1)
+  {    
+    // determine dimensions of next image
+    $nextWidth = $smallestWidth * pow(2, $i);
+    $nextHeight = $smallestHeight * pow(2, $i);
+
+    // resize previous image to next size
+    $nextImage = imagecreatetruecolor($nextWidth, $nextHeight);
+    imagecopyresized($nextImage, $prevImage, 0, 0, 0, 0, 
+      $nextWidth, $nextHeight, $prevWidth, $prevHeight);
+
+    // apply blur filter
+    imagefilter($nextImage, IMG_FILTER_GAUSSIAN_BLUR);
+
+    // now the new image becomes the previous image for the next step
+    $prevImage = $nextImage;
+    $prevWidth = $nextWidth;
+      $prevHeight = $nextHeight;
+  }
+
+  // scale back to original size and blur one more time
+  imagecopyresized($gdImageResource, $nextImage, 
+    0, 0, 0, 0, $originalWidth, $originalHeight, $nextWidth, $nextHeight);
+  imagefilter($gdImageResource, IMG_FILTER_GAUSSIAN_BLUR);
+
+  // clean up
+  imagedestroy($prevImage);
+
+  // return result
+  return $gdImageResource;
+}
+
+
+function rgba_colorize($img, $color) 
+{ 
+    imagesavealpha($img, true); 
+    imagealphablending($img, true); 
+
+    $img_x = imagesx($img); 
+    $img_y = imagesy($img); 
+    for ($x = 0; $x < $img_x; ++$x) 
+    { 
+        for ($y = 0; $y < $img_y; ++$y) 
+        { 
+            $rgba = imagecolorsforindex($img, imagecolorat($img, $x, $y)); 
+            $color_alpha = imagecolorallocatealpha($img, $color[0], $color[1], $color[2], $rgba['alpha']); 
+            imagesetpixel($img, $x, $y, $color_alpha); 
+            imagecolordeallocate($img, $color_alpha); 
+        } 
+    } 
+} 
+
+function operator($val1, $val2, $operator){
+    switch($operator){
+        case '*':
+            $response = $val1 * $val2;
+            break;
+        case '/':
+            $response = $val1 / $val2;
+            break;
+        case '+':
+            $response = $val1 + $val2;
+            break;
+        case '*':
+            $response = $val1 - $val2;
+            break;
+        case '%':
+            $response = $val1 % $val2;
+            break;
+        default:
+            $response = 'Error';
+    }
+    return $response;
+}
+
+function getRandomImageFilter($image){
+    $name = [
+            // With arguments
+            IMG_FILTER_CONTRAST, IMG_FILTER_PIXELATE, IMG_FILTER_COLORIZE, IMG_FILTER_SMOOTH,
+            // Without arguments
+            IMG_FILTER_EMBOSS, IMG_FILTER_EDGEDETECT, IMG_FILTER_GRAYSCALE,
+            IMG_FILTER_GAUSSIAN_BLUR, IMG_FILTER_SELECTIVE_BLUR, IMG_FILTER_MEAN_REMOVAL,
+            IMG_FILTER_NEGATE,
+            // Others
+            'blur'
+            ];
+    $random = rand(0, count($name)-1);
+    if($random <= 10){
+        if ($random == 0) {
+            imagefilter($image, $name[$random], rand(-rand(0, 150), 150));
+        }
+        elseif ($random == 1) {
+            imagefilter($image, $name[$random], rand(0, 10), true);
+        }
+        elseif ($random == 2) {
+            imagefilter($image, $name[$random], rand(0, 255), rand(0, 255), rand(0, 255));
+        }
+        elseif ($random == 3) {
+            imagefilter($image, $name[$random], rand(0, 20));
+        }
+        else{
+            imageFilter($image, $name[$random]);
+        }
+    }
+    else{
+        blur($image, rand(1, 5));
+    }
+}

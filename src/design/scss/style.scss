@@ -162,8 +162,8 @@ html{
     z-index: 100;
     top: 0; right: 0;
     display: none;
-    width: 74vh;
-    height: auto;
+    width: auto;
+    max-height: 76vh;
     background: rgba(255, 165, 0, 0.7);
     margin: 24vh 2vw 0 2vw;
     border: double 5px black;
