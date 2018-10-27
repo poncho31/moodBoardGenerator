@@ -87,7 +87,7 @@ header('Content-Type: application/json');
 $images = [];
 $moodBoardImages = [];
 // Modifie une image
-$post = $_POST['val'];
+$post = $_POST['imgValues'];
 for ($i = 0; $i < count($post); $i++) {
     $image = "../../". $post[$i];
     $image2 = (count($post) > 1 && $i + 1 < count($post))? "../../". $post[$i + 1] : false;
@@ -102,10 +102,10 @@ for ($i = 0, $j=0; $i < count($images); $i++) {
     $size = getimagesize($path.$images[0]);
     $image = imagecreatefromjpeg($path.$images[$i]);
     imagescale($image, $size[0], $size[1]);
-    
+
     $image2 = imagecreatefromjpeg($j);
     $fileName = 'modifiedImage'.time(). microtime(true) . '.jpg';
-    imagecopymerge_alpha($image, $image2, 0, 0, 0, 0, $size[0], $size[1], 80);
+    imagecopymerge_alpha($image, $image2, 0, 0, 0, 0, $size[0], $size[1], rand(40, 80));
     imageJPEG($image, $path . $fileName);
     imagedestroy($image);
     imagedestroy($image2);
@@ -123,26 +123,64 @@ echo json_encode($moodBoardImages);
 function filterImage($img, $img2, $size, $imageIndex){
     $originalImage = imagecreatefromjpeg(($img2 != false)? $img2 : $img);
     $image = imagecreatefromjpeg($img);
-    $imagex = $size[0];
-    $imagey = $size[1];
+    $imagex = imagesx($image);
+    $imagey = imagesy($image);
     // get proeminent color of image
     $thumb=imagecreatetruecolor(1,1); imagecopyresampled($thumb,$image,0,0,0,0,1,1,imagesx($image),imagesy($image));
     $hexa= '#' . strtoupper(dechex(imagecolorat($thumb,0,0)));
     // convert hexa to rgb
     list($r, $g, $b) = sscanf($hexa, "#%02x%02x%02x");
 
+    // USER INPUTS
+    $pixeliseBool = $_POST['pixelise']['bool'];
+        $pixelIncrementX = $_POST['pixelise']['incrementX'];
+        $pixelIncrementY = $_POST['pixelise']['incrementY'];
+        $pixelDivider = $_POST['pixelise']['divider'];
+        $pixelOperator = $_POST['pixelise']['operator'];
+        $pixelOrientationX = $_POST['pixelise']['orientationX'];
+        $pixelOrientationY = $_POST['pixelise']['orientationY'];
+
+    $quadrillageBool = $_POST['quadrillage']['bool'];
+        $quadrillageH = $_POST['quadrillage']['H'];
+        $quadrillageV = $_POST['quadrillage']['V'];
+        $quadriPixelIncrementX = $_POST['quadrillage']['incrementX'];
+        $quadriPixelIncrementY = $_POST['quadrillage']['incrementY'];
+        $quadriThickH = $_POST['quadrillage']['thickH'];
+        $quadriThickV = $_POST['quadrillage']['thickV'];
+        $quadriRandomColor = $_POST['quadrillage']['colorRandom'];
+            $quadriColorH = $_POST['quadrillage']['colorH'];
+            $quadriColorV = $_POST['quadrillage']['colorV'];
+        $quadriTypeH = $_POST['quadrillage']['typeH'];
+        $quadriTypeV = $_POST['quadrillage']['typeV'];
+
+    $autoMergeBool = $_POST['automerge']['bool'];
+        $autoMergeShift = $_POST['automerge']['shift'];
+    
+    $ifNullThenRandom = [
+        $pixeliseBool, $pixelIncrementX, $pixelIncrementY, $pixelDivider, $pixelOperator, $pixelOrientationX, $pixelOrientationY,
+        $quadrillageBool, $quadrillageH, $quadrillageV, $quadriPixelIncrementX, $quadriPixelIncrementY, $quadriThickH, $quadriThickV, $quadriRandomColor, $quadriColorH, $quadriColorV, $quadriTypeH, $quadriTypeV,
+        $autoMergeBool, $autoMergeShift
+    ];
+
+    foreach ($ifNullThenRandom as $value) {
+        if (empty($value)) {
+            $value =  rand(0, 1);
+        }
+    }
+    $pixelNumber = $imagex * (rand(10, 80)/1000);
     $randomBool = rand(0, 1);
-    $pixelNumber = $size[0] * (rand(10, 80)/1000);
+
+
     $pixelate = [
                 'pixelise' =>
                             [
-                                'bool' => $randomBool,
-                                'pixelIncrementx' => $pixelNumber,
-                                'pixelIncrementy' => $pixelNumber,
-                                'divider' => 2,
-                                'operator' => ($randomBool)? '/':'*',
-                                'orientationX' => 1 + rand(0, 15)/1000,
-                                'orientationY' => 1 + rand(0, 15)/1000
+                                'bool' => $pixeliseBool,
+                                'pixelIncrementx' => $imagex * ($pixelIncrementX/500),
+                                'pixelIncrementy' => $imagex * ($pixelIncrementY/500),
+                                'divider' => $pixelDivider,
+                                'operator' => ($pixelOperator)? '/':'*',
+                                'orientationX' => 1 + ((($pixelOrientationX !=0)?$pixelOrientationX: 0)/1000),
+                                'orientationY' => 1 + ((($pixelOrientationY !=0)?$pixelOrientationY: 0)/1000)
                             ],
                 'dimension' => 
                             [
@@ -151,30 +189,47 @@ function filterImage($img, $img2, $size, $imageIndex){
                             ],
                 'quadrillage' =>
                             [
-                                'bool' => $randomBool,
-                                'H' => $randomBool,
-                                'V' => $randomBool,
-                                'pixelIncrementx' => $pixelNumber / 2,
-                                'pixelIncrementy' => $pixelNumber / 2,
-                                'thickH' => rand(0,3),
-                                'thickV' => rand(0,3),
-                                'randomColor' => $randomBool,
-                                'colorH' => array('red'=>$r,'green'=>$g, 'blue'=>$b),
-                                'colorV' => array('red'=>$r,'green'=>$g, 'blue'=>$b),
-                                'colorRH' => ['red'=>rand(0, 255), 'green'=>rand(0, 255), 'blue'=>rand(0, 255)],
-                                'colorRV' => ['red'=>rand(0, 255), 'green'=>rand(0, 255), 'blue'=>rand(0, 255)],
+                                'bool' => $quadrillageBool,
+                                'H' => $quadrillageH,
+                                'V' => $quadrillageV,
+                                'pixelIncrementx' => ($imagex * $quadriPixelIncrementX/1000),
+                                'pixelIncrementy' => ($imagex * $quadriPixelIncrementY/1000),
+                                'thickH' => $quadriThickH,
+                                'thickV' => $quadriThickV,
+                                'randomColor' => $quadriRandomColor,
+                                'colorH' => array(
+                                                'red'=>$quadriColorH[0],
+                                                'green'=>$quadriColorH[1], 
+                                                'blue'=>$quadriColorH[2]
+                                            ),
+                                'colorV' => array(
+                                                'red'=>$quadriColorV[0],
+                                                'green'=>$quadriColorV[1], 
+                                                'blue'=>$quadriColorV[2]
+                                            ),
+                                'colorRH' => [
+                                              'red'=>rand(0, 255),
+                                              'green'=>rand(0, 255),
+                                              'blue'=>rand(0, 255)
+                                            ],
+                                'colorRV' => [
+                                              'red'=>rand(0, 255), 
+                                              'green'=>rand(0, 255), 
+                                              'blue'=>rand(0, 255)
+                                            ],
                                 'typeH'   => 
                                         [
-                                            'random' => $randomBool
+                                            'random' => $quadriTypeH
                                         ],
                                 'typeV'   => 
                                         [
-                                            'random' => $randomBool
+                                            'random' => $quadriTypeV
                                         ]
                             ],
                 'autoMerge' => 
                             [
-                                'bool' => $randomBool,
+                                'bool' => $autoMergeBool,
+                                'shift' => $autoMergeShift
                             ]
                 ];
 
@@ -194,9 +249,7 @@ function filterImage($img, $img2, $size, $imageIndex){
             {
                 $rgb = imagecolorsforindex($image, imagecolorat($image, $x, $y));
                 $color = imagecolorclosest($image, $rgb['red'], $rgb['green'], $rgb['blue']);
-                imagefilledrectangle($image, operator($x, $axeX, $operator), operator($y, $axeX, $operator), $x+($pixelate['pixelise']['pixelIncrementx'] / $divider), $y+($pixelate['pixelise']['pixelIncrementy']/$divider), $color);   
-                if ($x % 1.5 == 0 && $y % 1.5 == 0) {
-                }
+                imagefilledrectangle($image, operator($x, $axeX, $operator), operator($y, $axeY, $operator), $x+($pixelate['pixelise']['pixelIncrementx'] / $divider), $y+($pixelate['pixelise']['pixelIncrementy']/$divider), $color);
             }
         }
     }
@@ -205,6 +258,8 @@ function filterImage($img, $img2, $size, $imageIndex){
     // QUADRILLAGE DE L'IMAGE
     $pixelate_y= $pixelate['quadrillage']['pixelIncrementy'];
     $pixelate_x= $pixelate['quadrillage']['pixelIncrementx'];
+    // imagefilter($image, IMG_FILTER_PIXELATE, ($imagex * $quadriPixelIncrementX/1000));
+
     for($y = 0;$y < $height;$y += $pixelate_y)
     {
         for($x = 0;$x < $width;$x += $pixelate_x)
@@ -229,29 +284,25 @@ function filterImage($img, $img2, $size, $imageIndex){
 
                 $randV = $quadri['typeV']['random'];
                 $randH = $quadri['typeH']['random'];
-                $m = $divider;
-                $m2 = -$divider;
+                $m = $x+10;
+                $m2 = $y+10;
                 if ($randV) {
                     $Vx1 += rand(-rand(0, $m), $m); $Vy1 += rand(-rand(0, $m), $m); $Vx2 += rand(-rand(0, $m), $m); $Vy2 += rand(-rand(0, $m), $m);
                 }
                 if ($randH) {
                     $Hx1 += rand(-rand(0, $m2), $m2); $Hy1 += rand(-rand(0, $m2), $m2); $Hx2 += rand(-rand(0, $m2), $m2); $Hy2 += rand(-rand(0, $m), $m);
                 }
+                
                 if($quadri['V'])imagelinethick($image, $Vx1, $Vy1, $Vx2, $Vy2, $colorV, $quadri['thickV']);
                 if($quadri['H'])imagelinethick($image, $Hx1, $Hy1, $Hx2, $Hy2, $colorH, $quadri['thickH']);
             }
         }       
     }
-    getRandomImageFilter($image);
+    getRandomImageFilter($image, ($imagex * $quadriPixelIncrementX/1000));
 
     $merge = $pixelate['autoMerge'];
     if ($merge['bool']) {
-        // imagealphablending($image, true);
-        // imagesavealpha($image, true);
-        // $img = imagecreatetruecolor(200, 200);
-        // imagearc($img,  60,  75,  50,  50,  0, 100, imagecolorallocate($img,   0, 255,   0));
-        // imagecopymerge_alpha($image, $originalImage, 0, 0, 0, 0, $size[0], $size[1], 50);
-        imagecopymerge($image, $originalImage, 0, 0, 0, 0, $size[0], $size[1], 50); //have to play with these numbers for it to work for you, etc.
+        // imagecopymerge($image, $originalImage, 0, 0, 0, 0, $size[0], $size[1], $merge['shift']);
     }
 
 
@@ -307,19 +358,6 @@ function imagecopymerge_alpha($dst_im, $src_im, $dst_x, $dst_y, $src_x, $src_y, 
     // insert cut resource to destination image 
     imagecopymerge($dst_im, $cut, $dst_x, $dst_y, 0, 0, $src_w, $src_h, $pct); 
 } 
-function imagecopymerge_alpha2($dst_im, $src_im, $dst_x, $dst_y, $src_x, $src_y, $src_w, $src_h, $pct){ 
-    // creating a cut resource 
-    $cut = imagecreatetruecolor($src_w, $src_h); 
-    // copying relevant section from background to the cut resource 
-    imagecopy($cut, $dst_im, 0, 0, $dst_x, $dst_y, $src_w, $src_h); 
-    
-    // copying relevant section from watermark to the cut resource 
-    imagecopy($cut, $src_im, 0, 0, $src_x, $src_y, $src_w, $src_h); 
-    
-    // insert cut resource to destination image 
-    return imagecopymerge($dst_im, $cut, $dst_x, $dst_y, 0, 0, $src_w, $src_h, $pct); 
-} 
-
 function blur($gdImageResource, $blurFactor = 3)
 {
   // blurFactor has to be an integer
@@ -412,7 +450,7 @@ function operator($val1, $val2, $operator){
     return $response;
 }
 
-function getRandomImageFilter($image){
+function getRandomImageFilter($image, $pixel){
     $name = [
             // With arguments
             IMG_FILTER_CONTRAST, IMG_FILTER_PIXELATE, IMG_FILTER_COLORIZE, IMG_FILTER_SMOOTH,
@@ -424,12 +462,13 @@ function getRandomImageFilter($image){
             'blur'
             ];
     $random = rand(0, count($name)-1);
-    if($random <= 10){
+
+    if($random <= count($name)-2){
         if ($random == 0) {
             imagefilter($image, $name[$random], rand(-rand(0, 150), 150));
         }
         elseif ($random == 1) {
-            imagefilter($image, $name[$random], rand(0, 10), true);
+            imagefilter($image, $name[$random], $pixel, true);
         }
         elseif ($random == 2) {
             imagefilter($image, $name[$random], rand(0, 255), rand(0, 255), rand(0, 255));

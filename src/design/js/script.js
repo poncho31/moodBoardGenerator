@@ -90,39 +90,100 @@ $(document).ready(function () {
     var isDragging = false;
     $('.imgContent').on('mousedown', ".theImages", function(){
             console.log('not dragging');
-            // $(this).addClass('.draggableSize');
             $(this).css({'width':'150px'});
     }).on('mousemove', '.theImages', () => { console.log('moving');})
+
     // $('body').on('mousemove', '.theImages', function(){
     //     // $(this).removeClass('.draggableSize');
     //     $(this).addClass('.draggableSize');
     //     console.log('dragging');
-
     // })
+
     $('.creation').on('mouseup', ".theImages", function () {
         console.log('was dragging');
         $(this).css({ 'width': '150px' });
 
     });
+
     // $('.theImages').on('mousedown', function () {
     //     console.log('was dragging');
     //     $(this).css({ 'width': '1000px' });
 
     // });
 
-    // GENERE LA VUE
+    // GENERE LA VUE -mixe les images
     $('body').on('click', '.clickView', function(){
-        let val = [];
+        // IMG
+        let imgValues = [];
+
+        // Images Effects
+        let pixeliseBool = 1; // true
+        let pixelIncrementX = rand(50, 50);
+        let pixelIncrementY = rand(50, 50);
+        let pixelDivider = 2;
+        let pixelOperator = 0; // true
+        let pixelOrientationX = 0; // entre 0 et 15
+        let pixelOrientationY= 0; // entre 0 et 15
+
+        let quadrillageBool = 1;
+        let quadrillageH = 1; // true
+        let quadrillageV = 1; // true
+        let quadriPixelIncrementX = 50;
+        let quadriPixelIncrementY = 50;
+        let quadriThickH = 0;
+        let quadriThickV = 0;
+        let quadriColorRandomBool = 1; // false
+        let quadriColorH = [0, 0, 0];
+        let quadriColorV = [255, 255, 255];
+        let quadriTypeH = 0; // false
+        let quadriTypeV = 0; // false
+
+        let automergeBool= 0; // true
+        let automergeShift= 50;
+
+
         $('.view').empty();
         $('.creation img').each(function(){
-            val.push($(this).attr('src'));
+            imgValues.push($(this).attr('src'));
                 }
         );
         $('.view').append('<img src="data/imgSite/loader.gif">');
         $.ajax({
             url: "src/model/mixinImagesModel.php",
             type: "POST",
-            data: {val: val},
+            data: 
+                { 
+                    imgValues: imgValues,
+                    pixelise: 
+                    {
+                        bool: pixeliseBool,
+                        incrementX: pixelIncrementX,
+                        incrementY: pixelIncrementY,
+                        divider: pixelDivider,
+                        operator: pixelOperator,
+                        orientationX: pixelOrientationX,
+                        orientationY: pixelOrientationY
+                    },
+                    quadrillage : 
+                    {
+                        bool: quadrillageBool,
+                        H: quadrillageH,
+                        V: quadrillageV,
+                        incrementX: quadriPixelIncrementX,
+                        incrementY: quadriPixelIncrementY,
+                        thickH: quadriThickH,
+                        thickV: quadriThickV,
+                        colorRandom: quadriColorRandomBool,
+                        colorH: quadriColorH,
+                        colorV: quadriColorV,
+                        typeH: quadriTypeH,
+                        typeV: quadriTypeV
+                    },
+                    automerge:{
+                        bool: automergeBool,
+                        shift: automergeShift
+                    }
+                },
             dataType: "json",
             success: function (data) {
                 console.log(data);
@@ -192,5 +253,7 @@ $(document).ready(function () {
     }
     window.requestAnimationFrame(updatescroll);
 
-
+    function rand(min, max) {
+        return Math.floor(Math.random() * (max - min + 1)) + min;
+    }
 });
