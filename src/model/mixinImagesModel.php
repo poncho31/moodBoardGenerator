@@ -179,8 +179,8 @@ function filterImage($img, $img2, $size, $imageIndex){
                                 'pixelIncrementy' => $imagex * ($pixelIncrementY/500),
                                 'divider' => $pixelDivider,
                                 'operator' => ($pixelOperator)? '/':'*',
-                                'orientationX' => 1 + ((($pixelOrientationX !=0)?$pixelOrientationX: 0)/1000),
-                                'orientationY' => 1 + ((($pixelOrientationY !=0)?$pixelOrientationY: 0)/1000)
+                                'orientationX' =>  ($pixelOrientationX !=0)? 1 +$pixelOrientationX /1000 : 1,
+                                'orientationY' => ($pixelOrientationY !=0)? 1 +$pixelOrientationY /1000 : 1
                             ],
                 'dimension' => 
                             [

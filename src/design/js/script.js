@@ -117,7 +117,7 @@ $(document).ready(function () {
         let imgValues = [];
 
         // Images Effects
-        let pixeliseBool = 1; // true
+        let pixeliseBool = 0; // true
         let pixelIncrementX = rand(50, 50);
         let pixelIncrementY = rand(50, 50);
         let pixelDivider = 2;
@@ -125,7 +125,7 @@ $(document).ready(function () {
         let pixelOrientationX = 0; // entre 0 et 15
         let pixelOrientationY= 0; // entre 0 et 15
 
-        let quadrillageBool = 1;
+        let quadrillageBool = 0;
         let quadrillageH = 1; // true
         let quadrillageV = 1; // true
         let quadriPixelIncrementX = 50;
