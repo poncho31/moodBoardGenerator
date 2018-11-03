@@ -198,14 +198,14 @@ function filterImage($img, $img2, $size, $imageIndex){
                                 'thickV' => $quadriThickV,
                                 'randomColor' => $quadriRandomColor,
                                 'colorH' => array(
-                                                'red'=>$quadriColorH[0],
-                                                'green'=>$quadriColorH[1], 
-                                                'blue'=>$quadriColorH[2]
+                                                'red'=>0,
+                                                'green'=>0, 
+                                                'blue'=>0
                                             ),
                                 'colorV' => array(
-                                                'red'=>$quadriColorV[0],
-                                                'green'=>$quadriColorV[1], 
-                                                'blue'=>$quadriColorV[2]
+                                                'red'=>255,
+                                                'green'=>255, 
+                                                'blue'=>255
                                             ),
                                 'colorRH' => [
                                               'red'=>rand(0, 255),
@@ -272,8 +272,8 @@ function filterImage($img, $img2, $size, $imageIndex){
                 $colH = $quadri['colorRH'];
             }
             else{
-                $colV = $quadri['colorV'];
-                $colH = $quadri['colorH'];
+                // $colV = $quadri['colorV'];
+                // $colH = $quadri['colorH'];
             }
             $colorV = imagecolorclosest($image, $colV['red'], $colV['green'], $colV['blue']);
             $colorH = imagecolorclosest($image, $colH['red'], $colH['green'], $colH['blue']);

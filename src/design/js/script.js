@@ -115,33 +115,6 @@ $(document).ready(function () {
     $('body').on('click', '.clickView', function(){
         // IMG
         let imgValues = [];
-
-        // Images Effects
-        let pixeliseBool = 0; // true
-        let pixelIncrementX = rand(50, 50);
-        let pixelIncrementY = rand(50, 50);
-        let pixelDivider = 2;
-        let pixelOperator = 0; // true
-        let pixelOrientationX = 0; // entre 0 et 15
-        let pixelOrientationY= 0; // entre 0 et 15
-
-        let quadrillageBool = 0;
-        let quadrillageH = 1; // true
-        let quadrillageV = 1; // true
-        let quadriPixelIncrementX = 50;
-        let quadriPixelIncrementY = 50;
-        let quadriThickH = 0;
-        let quadriThickV = 0;
-        let quadriColorRandomBool = 1; // false
-        let quadriColorH = [0, 0, 0];
-        let quadriColorV = [255, 255, 255];
-        let quadriTypeH = 0; // false
-        let quadriTypeV = 0; // false
-
-        let automergeBool= 0; // true
-        let automergeShift= 50;
-
-
         $('.view').empty();
         $('.creation img').each(function(){
             imgValues.push($(this).attr('src'));
@@ -156,32 +129,32 @@ $(document).ready(function () {
                     imgValues: imgValues,
                     pixelise: 
                     {
-                        bool: pixeliseBool,
-                        incrementX: pixelIncrementX,
-                        incrementY: pixelIncrementY,
-                        divider: pixelDivider,
-                        operator: pixelOperator,
-                        orientationX: pixelOrientationX,
-                        orientationY: pixelOrientationY
+                        bool: $('input[name=pixeliseBool]:checked').val(),
+                        incrementX: $('#pixelIncrementX').val(),
+                        incrementY: $('#pixelIncrementY').val(),
+                        divider: $('#pixelDivider').val(),
+                        operator: $('input[name=pixelOperator]:checked').val(),
+                        orientationX: $('#pixelOrientationX').val(),
+                        orientationY: $('#pixelOrientationY').val()
                     },
                     quadrillage : 
                     {
-                        bool: quadrillageBool,
-                        H: quadrillageH,
-                        V: quadrillageV,
-                        incrementX: quadriPixelIncrementX,
-                        incrementY: quadriPixelIncrementY,
-                        thickH: quadriThickH,
-                        thickV: quadriThickV,
-                        colorRandom: quadriColorRandomBool,
-                        colorH: quadriColorH,
-                        colorV: quadriColorV,
-                        typeH: quadriTypeH,
-                        typeV: quadriTypeV
+                        bool: $('input[name=quadri]:checked').val(),
+                        H: $('input[name=quadrillageH]:checked').val(),
+                        V: $('input[name=quadrillageV]:checked').val(),
+                        incrementX: $('#quadriPixelIncrementX').val(),
+                        incrementY: $('#quadriPixelIncrementY').val(),
+                        thickH: $('#quadriThickH').val(),
+                        thickV: $('#quadriThickV').val(),
+                        colorRandom: $('input[name=quadriColorRandomBool]:checked').val(),
+                        colorH: $('#quadriColorH').val(),
+                        colorV: $('#quadriColorV').val(),
+                        typeH: $('input[name=quadriTypeH]:checked').val(),
+                        typeV: $('input[name=quadriTypeV]:checked').val()
                     },
                     automerge:{
-                        bool: automergeBool,
-                        shift: automergeShift
+                        bool: $('input[name=merge]:checked').val(),
+                        shift: $('#mergeShift').val()
                     }
                 },
             dataType: "json",
