@@ -111,8 +111,8 @@ for ($i = 0, $j=0; $i < count($images); $i++) {
     imagedestroy($image2);
 
     $objIPTC = new IPTC($path.$fileName);
-    $objIPTC->setValue(IPTC_HEADLINE, "MoodeBoarded image");
-    $objIPTC->setValue(IPTC_CAPTION, "Created with MoodBoard generator");
+    $objIPTC->setValue(IPTC_HEADLINE, "MoodBoarded image");
+    $objIPTC->setValue(IPTC_CAPTION, "Generate with MoodBoard generator");
     // echo $objIPTC->getValue(IPTC_HEADLINE);
     $moodBoardImages [] = $fileName;
 }
@@ -129,7 +129,7 @@ function filterImage($img, $img2, $size, $imageIndex){
     $thumb=imagecreatetruecolor(1,1); imagecopyresampled($thumb,$image,0,0,0,0,1,1,imagesx($image),imagesy($image));
     $hexa= '#' . strtoupper(dechex(imagecolorat($thumb,0,0)));
     // convert hexa to rgb
-    list($r, $g, $b) = sscanf($hexa, "#%02x%02x%02x");
+    
 
     // USER INPUTS
     $pixeliseBool = $_POST['pixelise']['bool'];
@@ -149,24 +149,26 @@ function filterImage($img, $img2, $size, $imageIndex){
         $quadriThickV = $_POST['quadrillage']['thickV'];
         $quadriRandomColor = $_POST['quadrillage']['colorRandom'];
             $quadriColorH = $_POST['quadrillage']['colorH'];
+            if ($quadriColorH != '') {
+                list($r, $g, $b) = explode(';',$quadriColorH);
+            }
+            else{
+                list($r, $g, $b) = sscanf($hexa, "#%02x%02x%02x");
+            }
+
             $quadriColorV = $_POST['quadrillage']['colorV'];
+            if ($quadriColorV != '') {
+                list($r2, $g2, $b2) = explode(';',$quadriColorV);
+            }
+            else{
+                list($r2, $g2, $b2) = sscanf($hexa, "#%02x%02x%02x");
+            }
         $quadriTypeH = $_POST['quadrillage']['typeH'];
         $quadriTypeV = $_POST['quadrillage']['typeV'];
 
     $autoMergeBool = $_POST['automerge']['bool'];
         $autoMergeShift = $_POST['automerge']['shift'];
     
-    $ifNullThenRandom = [
-        $pixeliseBool, $pixelIncrementX, $pixelIncrementY, $pixelDivider, $pixelOperator, $pixelOrientationX, $pixelOrientationY,
-        $quadrillageBool, $quadrillageH, $quadrillageV, $quadriPixelIncrementX, $quadriPixelIncrementY, $quadriThickH, $quadriThickV, $quadriRandomColor, $quadriColorH, $quadriColorV, $quadriTypeH, $quadriTypeV,
-        $autoMergeBool, $autoMergeShift
-    ];
-
-    foreach ($ifNullThenRandom as $value) {
-        if (empty($value)) {
-            $value =  rand(0, 1);
-        }
-    }
     $pixelNumber = $imagex * (rand(10, 80)/1000);
     $randomBool = rand(0, 1);
 
@@ -198,14 +200,14 @@ function filterImage($img, $img2, $size, $imageIndex){
                                 'thickV' => $quadriThickV,
                                 'randomColor' => $quadriRandomColor,
                                 'colorH' => array(
-                                                'red'=>0,
-                                                'green'=>0, 
-                                                'blue'=>0
+                                                'red'=>$r,
+                                                'green'=>$g, 
+                                                'blue'=>$b
                                             ),
                                 'colorV' => array(
-                                                'red'=>255,
-                                                'green'=>255, 
-                                                'blue'=>255
+                                                'red'=>$r2,
+                                                'green'=>$g2, 
+                                                'blue'=>$b2
                                             ),
                                 'colorRH' => [
                                               'red'=>rand(0, 255),
@@ -272,8 +274,8 @@ function filterImage($img, $img2, $size, $imageIndex){
                 $colH = $quadri['colorRH'];
             }
             else{
-                // $colV = $quadri['colorV'];
-                // $colH = $quadri['colorH'];
+                $colV = $quadri['colorV'];
+                $colH = $quadri['colorH'];
             }
             $colorV = imagecolorclosest($image, $colV['red'], $colV['green'], $colV['blue']);
             $colorH = imagecolorclosest($image, $colH['red'], $colH['green'], $colH['blue']);
