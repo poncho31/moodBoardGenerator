@@ -1,3 +1,3 @@
 # moodBoardGenerator
-Generate images from mutliple images upload
+Mix images with different random options (pixelise, transparence, ...) to get one new image
 
